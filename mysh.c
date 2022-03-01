@@ -10,6 +10,49 @@
 #include <stdlib.h>
 #define MAX 512
 #define clear() printf("\033[H\033[J")
+
+/*
+ * Written by Edward
+ * Some (UNTESTED!!!!!) code to parse commands and break it up
+ * into something that execv() can hopefully use
+ *
+ * Things to probably note:
+ * 	We don't need to use a method, just wrote it as one
+ * 	so it didnt mess up your flow in the shell init stuff
+ *
+ * 	We need to free all the stuff in **tokens;
+ * 	probably after each loop + exec call just to be safe
+ * 	since we can just alloc it again next time
+ *
+ * 	Error handling? If the input is real wacky? Don't know
+ * 	if we need to account for hyper-weird stuff where 
+ * 	fgets() literally cannot read it (as opposed to
+ * 	commands that don't exist)
+ */
+void parse_command(FILE* fp) {
+    char line[512];
+    if(!fgets(line, 512, fp))		// if program forcibly terminates (like CTRL+D)
+        return -1;			// returns -1
+
+    if(strcmp(line, "exit\n" == 0)	// if we get "exit" as command
+        return 0;			// returns 0
+
+    char *token;			// creates an token to represent one parameter (eg. "ls" or "-la")
+    char **tokens = malloc(sizeof(char *) * size);	// creates a list of tokens
+    token = strtok(line, " ");		// isolates the first parameter
+    int i = 0;
+    while(token != NULL) {
+        tokens[i] = strdup(token);	// adds a null-terminating char to end of each token
+	token = strtok(NULL, " ");	// isolates next parameter
+	i++;				// increments index
+    }
+    tokens[i] = token;			// adds final token to the end
+
+    // I haven't tested this yet, you can probably just loop
+    // through tokens[] and print out
+    
+}
+
 void init_shell()
 {
 //    clear();
