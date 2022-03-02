@@ -29,7 +29,7 @@
  * 	fgets() literally cannot read it (as opposed to
  * 	commands that don't exist)
  */
-// void parse_command(FILE* fp) {
+void parse_command(char** tokens, char* line) {
 //     char line[512];
 //     if(!fgets(line, 512, fp))		// if program forcibly terminates (like CTRL+D)
 //         return -1;			// returns -1
@@ -37,21 +37,21 @@
 //     if(strcmp(line, "exit\n" == 0)	// if we get "exit" as command
 //         return 0;			// returns 0
 
-//     char *token;			// creates an token to represent one parameter (eg. "ls" or "-la")
+    char *token;			// creates an token to represent one parameter (eg. "ls" or "-la")
 //     char **tokens = malloc(sizeof(char *) * size);	// creates a list of tokens
-//     token = strtok(line, " ");		// isolates the first parameter
-//     int i = 0;
-//     while(token != NULL) {
-//         tokens[i] = strdup(token);	// adds a null-terminating char to end of each token
-// 	token = strtok(NULL, " ");	// isolates next parameter
-// 	i++;				// increments index
-//     }
-//     tokens[i] = token;			// adds final token to the end
+    token = strtok(line, " \t");		// isolates the first parameter
+    int i = 0;
+    while(token != NULL) {
+        tokens[i] = strdup(token);	// adds a null-terminating char to end of each token
+	token = strtok(NULL, " \t");	// isolates next parameter
+	i++;				// increments index
+    }
+    tokens[i] = token;			// adds final token to the end
 
 //     // I haven't tested this yet, you can probably just loop
 //     // through tokens[] and print out
     
-// }
+}
 
 void init_shell()
 {
@@ -117,15 +117,26 @@ int main(int argc, char **argv) {
             // second argument is pointer to our entire argument array?
 
             // prog name is argv[0] and we can pass in 
-            char *const argv[3] = {
-                "/usr/bin/ls",
-                "-l", 
-                NULL
-            };
+            // char *const argv[3] = {
+            //     "/usr/bin/ls",
+            //     "-l", 
+            //     NULL
+            // };
             
-            int ret =  execv(argv[0], argv);
-            printf("failed to execute %s, execv() ret val: %d\n", argv[0], ret);
-            _exit(1); // this means execv() fails
+            // int ret =  execv(argv[0], argv);
+	    if(linePtr[lineLength - 1] == '\n')
+                linePtr[lineLength - 1] = '\0';
+
+	    char** tokens = malloc(sizeof(char*) * 512);
+	    parse_command(tokens, linePtr);
+	    int ret = execv(tokens[0], tokens);
+
+            printf("failed to execute %s, execv() ret val: %d\n", tokens[0], ret);
+            for(int i = 0; i < 512; i++) {
+                free(tokens[i]);
+	    }
+	    free(tokens);
+	    _exit(1); // this means execv() fails
         } else {
             // parent process
             printf("I am parent with pid: %d\n", getpid());
