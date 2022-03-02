@@ -1,3 +1,6 @@
 some references used:
 https://stackoverflow.com/questions/51059508/using-fgets-without-predefined-buffer
 
+bugs to fix:
+- shell doesn't exit in batch mode when the line read is "exit"
+    - I have tried comparing to "exit" and "exit\n" but to no avail
