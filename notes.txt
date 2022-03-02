@@ -1,2 +1,3 @@
-test
+some references used:
+https://stackoverflow.com/questions/51059508/using-fgets-without-predefined-buffer
 
