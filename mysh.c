@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
         printf("stdin\n");
     }
     if (fp == NULL) {
-        exit(1);
+        _exit(1);
     }
     init_shell();
 
@@ -96,14 +96,15 @@ int main(int argc, char **argv) {
         lineLength = getline(&linePtr, &lineSize, fp);
         if (linePtr == NULL || lineLength == -1) {
             write(1, "exiting shell...", 17);
-            exit(1);
+            fclose(fp);
+            _exit(1);
         }
         int result = strcmp(linePtr, "exit\n");
         if (!result) {
             write(1, "exiting shell...", 17);
-            exit(1);
+            _exit(1);
         }
-        if (batchMode) {
+        if (batchMode) { // echo user command
             write(1, linePtr, lineLength);
         }
         // create a new process
@@ -124,7 +125,7 @@ int main(int argc, char **argv) {
             
             int ret =  execv(argv[0], argv);
             printf("failed to execute %s, execv() ret val: %d\n", argv[0], ret);
-            exit(1); // this means execv() fails
+            _exit(1); // this means execv() fails
         } else {
             // parent process
             printf("I am parent with pid: %d\n", getpid());
@@ -137,5 +138,6 @@ int main(int argc, char **argv) {
         lineSize = 0;
         
     }
+    fclose(fp);
     return 0;
 }

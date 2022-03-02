@@ -1,0 +1,5 @@
+/usr/bin/ls -l -a
+/usr/bin/ls -l -b
+/usr/bin/ls -l -c
+/usr/bin/ls -l -d 
+/usr/bin/ls -l -e
