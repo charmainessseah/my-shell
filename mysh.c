@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
         if (linePtr == NULL) {
             exit(1);
         }
-        int result = !strcmp(linePtr, "exit");
+        int result = strcmp(linePtr, "exit\n");
         if (!result) {
             write(1, "exiting shell...", 17);
             exit(1);
@@ -115,26 +115,26 @@ int main(int argc, char **argv) {
             // second argument is pointer to our entire argument array?
 
             // prog name is argv[0] and we can pass in 
-            // char *const argv[3] = {
-            //     "/usr/bin/ls",
-            //     "-l", 
-            //     NULL
-            // };
+            char *const argv[3] = {
+                "/usr/bin/ls",
+                "-l", 
+                NULL
+            };
             
             int ret =  execv(argv[0], argv);
             printf("failed to execute %s, execv() ret val: %d\n", argv[0], ret);
-            exit(1);
+            exit(1); // this means execv() fails
         } else {
             // parent process
             printf("I am parent with pid: %d\n", getpid());
             int pid = retVal;
             waitpid(pid, &status, 0);
         }
-
         // free up resources
         free(linePtr);
         linePtr = NULL;
         lineSize = 0;
+        
     }
     return 0;
 }
