@@ -39,11 +39,11 @@ void parse_command(char** tokens, char* line) {
 
     char *token;			// creates an token to represent one parameter (eg. "ls" or "-la")
 //     char **tokens = malloc(sizeof(char *) * size);	// creates a list of tokens
-    token = strtok(line, " ");		// isolates the first parameter
+    token = strtok(line, " \t");		// isolates the first parameter
     int i = 0;
     while(token != NULL) {
         tokens[i] = strdup(token);	// adds a null-terminating char to end of each token
-	token = strtok(NULL, " ");	// isolates next parameter
+	token = strtok(NULL, " \t");	// isolates next parameter
 	i++;				// increments index
     }
     tokens[i] = token;			// adds final token to the end
@@ -131,8 +131,12 @@ int main(int argc, char **argv) {
 	    parse_command(tokens, linePtr);
 	    int ret = execv(tokens[0], tokens);
 
-            printf("failed to execute %s, execv() ret val: %d\n", argv[0], ret);
-            _exit(1); // this means execv() fails
+            printf("failed to execute %s, execv() ret val: %d\n", tokens[0], ret);
+            for(int i = 0; i < 512; i++) {
+                free(tokens[i]);
+	    }
+	    free(tokens);
+	    _exit(1); // this means execv() fails
         } else {
             // parent process
             printf("I am parent with pid: %d\n", getpid());
