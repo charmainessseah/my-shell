@@ -93,8 +93,9 @@ int main(int argc, char **argv) {
         char    *linePtr = NULL;
         size_t   lineSize = 0;
         ssize_t  lineLength;
-        lineLength = getline(&linePtr, &lineSize, stdin);
-        if (linePtr == NULL) {
+        lineLength = getline(&linePtr, &lineSize, fp);
+        if (linePtr == NULL || lineLength == -1) {
+            write(1, "exiting shell...", 17);
             exit(1);
         }
         int result = strcmp(linePtr, "exit\n");
