@@ -15,7 +15,7 @@
 #define clear() printf("\033[H\033[J")
 
 /*
- * Returns the index of the file to redirect to in tokens array. Returns -1 if invalid
+ * Returns the index of the file to redirect to in tokens array. Returns -1 if invalid command, 0 otherwise
  */
 int file_redirection(char **tokens, int numArgs) {
     int numRedirectionOperators = 0;
@@ -38,9 +38,10 @@ int file_redirection(char **tokens, int numArgs) {
         invalidRedirection = 1;
     } 
     if (invalidRedirection) {
+        return -1;
         write(1, "Redirection misformatted.\n", 27);
     }
-    return -1;
+    return 0;
 }
 /*
  * Written by Edward
@@ -163,14 +164,16 @@ int main(int argc, char **argv) {
 	    char** tokens = malloc(sizeof(char*) * 512);
 	    int numArgs = parse_command(tokens, linePtr);
         int indexToken = file_redirection(tokens, numArgs);
-        if (indexToken != -1) {
+        
+        if (indexToken == -1) {
+            continue; // invalid command - do not execute
+        }
+        if (indexToken != 0) {
             // handle redirection
             close(1); //close stdout
             // first check for user permissions using access()
             open(tokens[indexToken], O_WRONLY);
-        } else {
-            continue; // invalid command - do not execute
-        }
+        } 
 
 	    int ret = execv(tokens[0], tokens);
 
