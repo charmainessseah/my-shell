@@ -162,6 +162,12 @@ int main(int argc, char **argv) {
                 linePtr[lineLength - 1] = '\0';
 
 	    char** tokens = malloc(sizeof(char*) * 512);
+        /*****
+        modified this section such that file_redirection returns 3 diff values - see function header
+        numArgs gets the number of arguments from user input
+        have yet to check for user permissions first on line 179
+        issues: output is still not being redirected to the output file
+        ****/
 	    int numArgs = parse_command(tokens, linePtr);
         int indexToken = file_redirection(tokens, numArgs);
         
@@ -174,7 +180,7 @@ int main(int argc, char **argv) {
             // first check for user permissions using access()
             open(tokens[indexToken], O_WRONLY);
         } 
-
+        // --------------------------------------------------------
 	    int ret = execv(tokens[0], tokens);
 
             printf("failed to execute %s, execv() ret val: %d\n", tokens[0], ret);
