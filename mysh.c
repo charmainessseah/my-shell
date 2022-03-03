@@ -48,8 +48,8 @@ int file_redirection(char **tokens, int numArgs) {
         invalidRedirection = 1;
     } 
     if (invalidRedirection) {
-        return -1;
         write(1, "Redirection misformatted.\n", 27);
+        return -1;
     }
     return 0;
 }
@@ -119,6 +119,7 @@ int main(int argc, char **argv) {
         batchMode = 1;
     }
     FILE *fp = NULL;
+    FILE *fpChild = NULL;
     if (batchMode) {
         fp = fopen(argv[1], "r");
     } else {
@@ -142,8 +143,9 @@ int main(int argc, char **argv) {
             fclose(fp);
             _exit(1);
         }
-        int result = strcmp(linePtr, "exit\n");
-        if (!result) {
+        int resultInteractive = strcmp(linePtr, "exit\n");
+//        int resultBatch = strcmp(linePtr, "exit");
+        if (!resultInteractive) {
             write(1, "exiting shell...\n", 18);
             _exit(1);
         }
@@ -199,6 +201,7 @@ int main(int argc, char **argv) {
             handle_child_argv(tokens, childArgv, indexToken);
             int ret = -1;
             if (indexToken != 0) {
+                fpChild = fopen(tokens[indexToken], "w");
                 ret = execv(childArgv[0], childArgv);
             } else {
                 ret = execv(tokens[0], tokens);
@@ -225,6 +228,9 @@ int main(int argc, char **argv) {
         
     }
     fclose(fp);
+    if (fpChild != NULL) {
+        fclose(fpChild);
+    }
     return 0;
 }
 
