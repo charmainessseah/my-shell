@@ -15,6 +15,16 @@
 #define clear() printf("\033[H\033[J")
 
 /*
+ * Takes in the token array and removes all arguments after including and after the redirection operator. 
+ * Appends a null character at the end. Goal: Correct array for execv to use when redirection is enabled
+ */
+void handle_child_argv(char **tokens, char **childArgv, int tokenLength) {
+    for (int i = 0; i < tokenLength - 1; i++) {
+        childArgv[i] = tokens[i];
+    }
+    childArgv[tokenLength - 1] = NULL;
+}
+/*
  * Returns the index of the file to redirect to in tokens array. Returns -1 if invalid command, 0 otherwise
  */
 int file_redirection(char **tokens, int numArgs) {
@@ -137,6 +147,7 @@ int main(int argc, char **argv) {
             write(1, "exiting shell...\n", 18);
             _exit(1);
         }
+        printf("line %s\n", linePtr);
         if (batchMode) { // echo user command
             write(1, linePtr, lineLength);
             // write(1, "\n", 2);
@@ -170,7 +181,9 @@ int main(int argc, char **argv) {
         ****/
 	    int numArgs = parse_command(tokens, linePtr);
         int indexToken = file_redirection(tokens, numArgs);
-        
+        // printf("num args: %d\n", numArgs);
+        // printf("index file: %d\n", indexToken);
+        // printf("filename: %s\n", tokens[indexToken]);
         if (indexToken == -1) {
             continue; // invalid command - do not execute
         }
@@ -181,7 +194,17 @@ int main(int argc, char **argv) {
             open(tokens[indexToken], O_WRONLY);
         } 
         // --------------------------------------------------------
-	    int ret = execv(tokens[0], tokens);
+            // we want it such that tokens being passed into execv only contains the command before > as file redirection is taken care of
+            char** childArgv = malloc(sizeof(char*) * 512);
+            handle_child_argv(tokens, childArgv, indexToken);
+            int ret = -1;
+            if (indexToken != 0) {
+                ret = execv(childArgv[0], childArgv);
+            } else {
+                ret = execv(tokens[0], tokens);
+            }
+        // --------------------------------------------------------
+            // int ret = execv(tokens[0], tokens);
 
             printf("failed to execute %s, execv() ret val: %d\n", tokens[0], ret);
             for(int i = 0; i < 512; i++) {
@@ -204,3 +227,4 @@ int main(int argc, char **argv) {
     fclose(fp);
     return 0;
 }
+
