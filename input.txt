@@ -1,6 +1,6 @@
-/usr/bin/ls -l -a
-/usr/bin/ls -l -b
-/usr/bin/ls -l -c
+/usr/bin/ls -l -a >
+/usr/bin/ls > -l -b
+/usr/bin/ls -l > file.txt
 /usr/bin/ls -l -d
 exit 
 /usr/bin/ls -l -e
