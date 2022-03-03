@@ -84,7 +84,7 @@ int parse_command(char** tokens, char* line) {
 //     // through tokens[] and print out
 
     // ----------------------------------------------------------------------------------
-    int numArgs = i+1;
+    int numArgs = i;
     return numArgs;
 }
 
