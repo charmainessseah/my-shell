@@ -104,28 +104,15 @@ int file_redirection(char **tokens, int numArgs) {
  * 	commands that don't exist)
  */
 int parse_command(char** tokens, char* line) {
-//     char line[512];
-//     if(!fgets(line, 512, fp))		// if program forcibly terminates (like CTRL+D)
-//         return -1;			// returns -1
-
-//     if(strcmp(line, "exit\n" == 0)	// if we get "exit" as command
-//         return 0;			// returns 0
-
-    char *token;			// creates an token to represent one parameter (eg. "ls" or "-la")
-//     char **tokens = malloc(sizeof(char *) * size);	// creates a list of tokens
-    token = strtok(line, " \t");		// isolates the first parameter
+    char *token;			            // creates an token to represent one parameter (eg. "ls" or "-la")
+    token = strtok(line, " \t");        // isolates the first parameter
     int i = 0;
     while(token != NULL) {
-        tokens[i] = strdup(token);	// adds a null-terminating char to end of each token
-	    token = strtok(NULL, " \t");	// isolates next parameter
-	    i++;				// increments index
+        tokens[i] = strdup(token);      // adds a null-terminating char to end of each token
+        token = strtok(NULL, " \t");    // isolates next parameter
+        i++;				            // increments index
     }
-    tokens[i] = token;			// adds final token to the end
-
-//     // I haven't tested this yet, you can probably just loop
-//     // through tokens[] and print out
-
-    // ----------------------------------------------------------------------------------
+    tokens[i] = token;			        // adds final token to the end
     int numArgs = i;
     return numArgs;
 }
@@ -133,19 +120,21 @@ int parse_command(char** tokens, char* line) {
 void init_shell()
 {
     write(1, "\n\n\n\n******************"
-        "************************", 46);
-    write(1, "\n\n\n\t****MY SHELL****", 22);
-    write(1, "\n\n\t-USE AT YOUR OWN RISK-", 26);
-    write(1, "\n\n\n\n*******************"
-        "***********************", 47);
+        "************************", 47);
+    write(1, "\n\n\n\t****WELCOME TO****\n", 24);
+    write(1, "\t*****MY SHELL*****", 20);
+    write(1, "\n\n\n*******************"
+        "***********************", 46);
     char* username = getenv("USER");
     write(1, "\n\nHello ", 9);
-    write(1, username, sizeof(username) + 1);
+    write(1, username, strlen(username) + 1);
     write(1, "\n", 2);
     sleep(1);
 }
 
 int main(int argc, char **argv) {
+    //TODO: the command <./mysh .> starts up shell interactive mode and exits right away. It should return
+    // <Error: Cannot open file .>
     int batchMode = 0;
     if (argc == 2) {
         batchMode = 1;
@@ -160,18 +149,18 @@ int main(int argc, char **argv) {
     } else {
         fp = stdin;
     }
-    // TODO: fix output format here
     if (fp == NULL && batchMode) {
-        write(STDERR_FILENO, "Error: Cannot open file ", 24);
-        write(STDERR_FILENO, argv[1], sizeof(argv[1]) + 1);
+        write(STDERR_FILENO, "Error: Cannot open file ", 25);
+        write(STDERR_FILENO, argv[1], strlen(argv[1]) + 1);
         write(STDERR_FILENO, "\n", 2);
-        printf("file name: %s\n", argv[1]);   
         _exit(1);
     }
     if (fp == NULL) {
         _exit(1);
     }
     init_shell();
+    char **tokens = NULL;
+    char **childArgv = NULL;
     while (1) {
         if (!batchMode) {
             write(1, "mysh> ", 7); 
@@ -190,7 +179,6 @@ int main(int argc, char **argv) {
             write(1, "exiting shell...\n", 18);
             _exit(1);
         }
-        printf("line: %s", linePtr);
         if (batchMode) { // echo user command
             write(1, linePtr, lineLength);
         }
@@ -200,7 +188,7 @@ int main(int argc, char **argv) {
         if (retVal == 0) {
 	    if(linePtr[lineLength - 1] == '\n')
                 linePtr[lineLength - 1] = '\0';
-	    char** tokens = malloc(sizeof(char*) * 512);
+        tokens = malloc(sizeof(char*) * 512);
         /*****
         modified this section such that file_redirection returns 3 diff values - see function header
         numArgs gets the number of arguments from user input
@@ -209,14 +197,7 @@ int main(int argc, char **argv) {
         ****/
         int numArgs = parse_command(tokens, linePtr);
         int indexToken = file_redirection(tokens, numArgs);
-        // printf("num args: %d\n", numArgs);
-        // printf("index file: %d\n", indexToken);
-        // printf("filename: %s\n", tokens[indexToken]);
         if (indexToken == -1) {
-            for(int i = 0; i < 512; i++) {
-                free(tokens[i]);
-            }   
-            free(tokens);
             _exit(1); // invalid command - do not execute
         }
         if (indexToken != 0) {
@@ -226,13 +207,13 @@ int main(int argc, char **argv) {
             } else {
                 //TODO: test output formatting
                 write(1, "Cannot write to file ", 22); 
-                write(1, tokens[indexToken], sizeof(tokens[indexToken]) + 1);
+                write(1, tokens[indexToken], strlen(tokens[indexToken]) + 1);
                 write(1, "\n", 2);
             }
         } 
         // --------------------------------------------------------
         // we want it such that tokens being passed into execv only contains the command before > as file redirection is taken care of
-        char** childArgv = malloc(sizeof(char*) * 512);
+        childArgv = malloc(sizeof(char*) * 512);
         handle_child_argv(tokens, childArgv, indexToken);
         if (indexToken != 0) {
             fpChild = fopen(tokens[indexToken], "w");
@@ -241,14 +222,7 @@ int main(int argc, char **argv) {
             execv(tokens[0], tokens);
         }
         // --------------------------------------------------------
-        // TODO: fix memory bug when invalid command and decide where to free pointers
         write(STDERR_FILENO, "job: Command not found.\n", 25);
-       // for(int i = 0; i < 512; i++) {
-       //     free(tokens[i]);
-       //     free(childArgv[i]);
-       // }
-       // free(childArgv);
-       // free(tokens);
         _exit(1); // this means execv() fails
         } else {
             // parent process
@@ -259,11 +233,25 @@ int main(int argc, char **argv) {
         free(linePtr);
         linePtr = NULL;
         lineSize = 0;
-        
     }
-    fclose(fp);
+    // free up resources
+    if (fp != NULL) {
+        fclose(fp);
+    }
     if (fpChild != NULL) {
         fclose(fpChild);
+    }
+    if (tokens != NULL) {
+        for(int i = 0; i < 512; i++) {
+            free(tokens[i]); 
+        }                
+        free(tokens);
+    }
+    if (childArgv != NULL) {
+        for (int i = 0; i < 512; i++) {
+            free(childArgv[i]);
+        }
+        free(childArgv);
     }
     return 0;
 }
