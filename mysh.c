@@ -1,4 +1,3 @@
-//#include <process.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <readline/readline.h>
@@ -13,6 +12,7 @@
 
 #define MAX 512
 #define clear() printf("\033[H\033[J")
+#define STDERR_FILENO 2
 
 /*
  * Takes in the token array and removes all arguments after including and after the redirection operator. 
@@ -48,7 +48,7 @@ int file_redirection(char **tokens, int numArgs) {
         invalidRedirection = 1;
     } 
     if (invalidRedirection) {
-        write(1, "Redirection misformatted.\n", 27);
+        write(1, "Redirection misformatted.\n", 26);
         return -1;
     }
     return 0;
@@ -117,6 +117,9 @@ int main(int argc, char **argv) {
     int batchMode = 0;
     if (argc == 2) {
         batchMode = 1;
+    } else if (argc > 2) {
+        write(STDERR_FILENO, "Usage: mysh [batch-file]\n", 26);
+        _exit(1);
     }
     FILE *fp = NULL;
     FILE *fpChild = NULL;
@@ -124,6 +127,14 @@ int main(int argc, char **argv) {
         fp = fopen(argv[1], "r");
     } else {
         fp = stdin;
+    }
+    // TODO: fix output format here
+    if (fp == NULL && batchMode) {
+        write(STDERR_FILENO, "Error: Cannot open file ", 24);
+        write(STDERR_FILENO, argv[1], sizeof(argv[1]) + 1);
+        write(STDERR_FILENO, "\n", 2);
+        printf("file name: %s\n", argv[1]);   
+        _exit(1);
     }
     if (fp == NULL) {
         _exit(1);
@@ -143,37 +154,21 @@ int main(int argc, char **argv) {
             fclose(fp);
             _exit(1);
         }
-        int resultInteractive = strcmp(linePtr, "exit\n");
-//        int resultBatch = strcmp(linePtr, "exit");
-        if (!resultInteractive) {
+        int result = strcmp(linePtr, "exit\n");
+        if (!result) {
             write(1, "exiting shell...\n", 18);
             _exit(1);
         }
-        printf("line %s\n", linePtr);
+        printf("line: %s", linePtr);
         if (batchMode) { // echo user command
             write(1, linePtr, lineLength);
-            // write(1, "\n", 2);
         }
         // create a new process
         int status;
         int retVal = fork();
         if (retVal == 0) {
-            // child process
-            // printf("I am child with pid: %d\n", getpid());
-            // get program name - argv[0]
-            // second argument is pointer to our entire argument array?
-
-            // prog name is argv[0] and we can pass in 
-            // char *const argv[3] = {
-            //     "/usr/bin/ls",
-            //     "-l", 
-            //     NULL
-            // };
-            
-            // int ret =  execv(argv[0], argv);
 	    if(linePtr[lineLength - 1] == '\n')
                 linePtr[lineLength - 1] = '\0';
-
 	    char** tokens = malloc(sizeof(char*) * 512);
         /*****
         modified this section such that file_redirection returns 3 diff values - see function header
@@ -181,43 +176,51 @@ int main(int argc, char **argv) {
         have yet to check for user permissions first on line 179
         issues: output is still not being redirected to the output file
         ****/
-	    int numArgs = parse_command(tokens, linePtr);
+        int numArgs = parse_command(tokens, linePtr);
         int indexToken = file_redirection(tokens, numArgs);
         // printf("num args: %d\n", numArgs);
         // printf("index file: %d\n", indexToken);
         // printf("filename: %s\n", tokens[indexToken]);
         if (indexToken == -1) {
-            continue; // invalid command - do not execute
-        }
-        if (indexToken != 0) {
-            // handle redirection
-            close(1); //close stdout
-            // first check for user permissions using access()
-            open(tokens[indexToken], O_WRONLY);
-        } 
-        // --------------------------------------------------------
-            // we want it such that tokens being passed into execv only contains the command before > as file redirection is taken care of
-            char** childArgv = malloc(sizeof(char*) * 512);
-            handle_child_argv(tokens, childArgv, indexToken);
-            int ret = -1;
-            if (indexToken != 0) {
-                fpChild = fopen(tokens[indexToken], "w");
-                ret = execv(childArgv[0], childArgv);
-            } else {
-                ret = execv(tokens[0], tokens);
-            }
-        // --------------------------------------------------------
-            // int ret = execv(tokens[0], tokens);
-
-            printf("failed to execute %s, execv() ret val: %d\n", tokens[0], ret);
             for(int i = 0; i < 512; i++) {
                 free(tokens[i]);
-	        }
-	    free(tokens);
-	    _exit(1); // this means execv() fails
+            }   
+            free(tokens);
+            _exit(1); // invalid command - do not execute
+        }
+        if (indexToken != 0) {
+            close(1); //close stdout
+            if (access(tokens[indexToken], W_OK)) { // check user permissions
+                open(tokens[indexToken], O_WRONLY);
+            } else {
+                //TODO: test output formatting
+                write(1, "Cannot write to file ", 22); 
+                write(1, tokens[indexToken], sizeof(tokens[indexToken]) + 1);
+                write(1, "\n", 2);
+            }
+        } 
+        // --------------------------------------------------------
+        // we want it such that tokens being passed into execv only contains the command before > as file redirection is taken care of
+        char** childArgv = malloc(sizeof(char*) * 512);
+        handle_child_argv(tokens, childArgv, indexToken);
+        if (indexToken != 0) {
+            fpChild = fopen(tokens[indexToken], "w");
+            execv(childArgv[0], childArgv);
+        } else {
+            execv(tokens[0], tokens);
+        }
+        // --------------------------------------------------------
+        // TODO: fix memory bug when invalid command and decide where to free pointers
+        write(STDERR_FILENO, "job: Command not found.\n", 25);
+       // for(int i = 0; i < 512; i++) {
+       //     free(tokens[i]);
+       //     free(childArgv[i]);
+       // }
+       // free(childArgv);
+       // free(tokens);
+        _exit(1); // this means execv() fails
         } else {
             // parent process
-            // printf("I am parent with pid: %d\n", getpid());
             int pid = retVal;
             waitpid(pid, &status, 0);
         }
