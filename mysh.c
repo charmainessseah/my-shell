@@ -24,116 +24,26 @@ struct node {
 struct node* head = NULL;
 
 struct node* search(struct node* head, char* alias) {
-    struct node* current = head;
-    if(head == NULL)
-        return NULL;
-    while(current->next != NULL) {
-        if(strcmp(current->alias, alias) == 0)
-            return current;
-	current = current->next;
-    }
     return NULL;
 }
 
-void print_node(struct node* node) {
-    printf("%s", node->alias);
-    for(int i = 0; i < node->commandLength; i++)
-        printf(" %s", (node->command)[i]);
-    printf("\n");
+void print_node() {
+
 }
 
-void print_list(struct node* head) {
-    struct node* current = head;
-    while(current != NULL) {
-        print_node(current);
-        current = current->next;
-    }
+void print_list() {
+
 }
 
-void add_alias(struct node* head, char* alias, char** command, int commandLength) {
-    if(head == NULL) {
-        head = (struct node*) malloc(sizeof(struct node));
-	head->next = NULL;
-	head->alias = alias;
-	head->command = command;
-	head->commandLength = commandLength;
-	printf("head added\n");
-    }
-    else {
-        struct node* newNode = NULL;
-	newNode = search(head, alias);
+void add_alias(char* alias, char** command, int commandLength) {
 
-	if(newNode == NULL) {
-            newNode = (struct node*) malloc(sizeof(struct node));
-	    newNode->next = head;
-	    newNode->alias = alias;
-	    newNode->command = command;
-	    newNode->commandLength = commandLength;
-	    printf("node added\n");
-	}
-	else {
-            newNode->command = command;
-	    newNode->commandLength = commandLength;
-	    printf("node updated\n");
-	}
-    }
 }
 
-void remove_alias(struct node* head, char* alias) {
-    struct node* current = head;
-    //struct node* previous = NULL;
+void remove_alias(char* alias) {
 
-    if(head == NULL)
-        return;
-
-    while(strcmp(current->alias, alias) != 0) {
-        
-    }
 }
 
-int alias_mode(struct node* head, char** tokens, int length) {
-    if(length == 0)
-        return 0;
-    if(strcmp(tokens[0], "alias") == 0) {
-        if(length == 1) {
-	printf("test");
-            print_list(head);
-	    return 1;
-	}
-	else if(strcmp(tokens[1], "alias") == 0 ||
-        strcmp(tokens[1], "unalias") == 0 ||
-        strcmp(tokens[1], "exit") == 0) {
-            fprintf(stderr, "alias: Too dangerous to handle that.\n");
-	    return -1;
-	}
-	else if(length == 2) {
-            struct node* temp = NULL;
-	    temp = search(head, tokens[0]);
-	    if(temp == NULL)
-                return -1;
-	    else {
-                print_node(temp);
-                return 1;
-	    }
-	}
-	else {
-            char* alias = tokens[0];
-	    char** command = (char**)&tokens[1];
-	    add_alias(head, alias, command, length-1);
-	    return 1;
-	}
-    }
-    else if(strcmp(tokens[0], "unalias") == 0) {
-        if(length == 1 || length >= 2) {
-            printf("unalias: Incorrect number of arguments.\n");
-	    return -1;
-	}
-	else {
-            char* alias = tokens[1];
-	    remove_alias(head, alias);
-	    return 1;
-	}
-    }
+int alias_mode(char** tokens, int length) {
     return 0;
 }
 /*
@@ -262,7 +172,6 @@ int main(int argc, char **argv) {
         _exit(1);
     }
     init_shell();
-    // struct node* head = NULL;
     while (1) {
         if (!batchMode) {
             write(1, "mysh> ", 7); 
@@ -300,8 +209,6 @@ int main(int argc, char **argv) {
         ****/
         int numArgs = parse_command(tokens, linePtr);
         int indexToken = file_redirection(tokens, numArgs);
-	//int aliasResult = alias_mode(head, tokens, numArgs);
-	//aliasResult+=0;
         // printf("num args: %d\n", numArgs);
         // printf("index file: %d\n", indexToken);
         // printf("filename: %s\n", tokens[indexToken]);
