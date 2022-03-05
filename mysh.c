@@ -350,6 +350,15 @@ int main(int argc, char **argv) {
         issues: output is still not being redirected to the output file
         ****/
         int numArgs = parse_command(tokens, linePtr);
+        //----------------------------------------------
+        // test for aliasing here
+        int doAliasing = alias_mode(tokens, numArgs);
+        printf("alias result: %d\n", doAliasing);
+        printf("num args: %d\n", numArgs);
+        if (doAliasing) {
+            _exit(1);
+        }
+        // ---------------------------------------------
         int indexToken = file_redirection(tokens, numArgs);
         if (indexToken == -1) {
             _exit(1); // invalid command - do not execute
