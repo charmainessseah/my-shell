@@ -25,12 +25,14 @@ struct node* head = NULL;
 
 // prints a node
 void print_node(struct node* node) {
-	printf("%s", node->alias);
-	for(int i = 0; i < node->commandLength; i++) {
-		printf(" %s", node->command[i]);
-	}
-	printf("\n");
+    write(1, node->alias, strlen(node->alias));
+    for(int i = 0; i < node->commandLength; i++) {
+        write(1, " ", 1);
+        write(1, node->command[i], strlen(node->command[i]));
+    }
+    write(1, "\n", 1);
 }
+
 
 // frees a node
 void free_node(struct node* node) {
@@ -81,18 +83,38 @@ struct node* search(char* alias) {
 // adds a node to the list of aliases
 void add_alias(char* alias, char** command, int length) {
 
-	struct node* newNode = (struct node*) malloc(sizeof(struct node));
+	if(head == NULL) {
+		head = (struct node*) malloc(sizeof(struct node));
+		printf("new head address		: %p\n", head);
+		printf("head's next address	: %p\n", head->next);
 
-	newNode->alias = strdup(alias);
+		head->alias = strdup(alias);
 
-	char** dupeCommand = (char**) malloc(sizeof(char*) * length);
-	for(int i = 0; i < length; i++) {
-		dupeCommand[i] = strdup(command[i]);
+		char** dupeCommand = (char**) malloc(sizeof(char*) * length);
+		for(int i = 0; i < length; i++) {
+			dupeCommand[i] = strdup(command[i]);
+		}
+		head->command = dupeCommand;
+		head->commandLength = length;
+		head->next = NULL;
 	}
-	newNode->command = dupeCommand;
-	newNode->commandLength = length;
-	newNode->next = head;
-	head = newNode;
+	else {
+		struct node* newNode = (struct node*) malloc(sizeof(struct node));
+		printf("current head address	: %p\n", head);
+		printf("new node address		: %p\n", newNode);
+
+		newNode->alias = strdup(alias);
+
+		char** dupeCommand = (char**) malloc(sizeof(char*) * length);
+		for(int i = 0; i < length; i++) {
+			dupeCommand[i] = strdup(command[i]);
+		}
+		newNode->command = dupeCommand;
+		newNode->commandLength = length;
+		newNode->next = head;
+		head = newNode;
+		printf("new node's next address		: %p\n", newNode->next);
+	}
 
 }
 
@@ -141,15 +163,14 @@ void remove_alias(char* alias) {
 // THIS FUNCTION WILL EXECUTE THE ALIAS-RELATED COMMAND BY ITSELF
 int alias_mode(char** tokens, int length) {
 	// first token is NOT "alias" or "unalias"
-	if(strcmp(tokens[0], "alias") != 0 || strcmp(tokens[0], "unalias") != 0)
+	if(strcmp(tokens[0], "alias") != 0 && strcmp(tokens[0], "unalias") != 0)
 		return 0;
 
 	// first token is alias
-	else if(strcmp(tokens[0], "alias") != 0) {
+	else if(strcmp(tokens[0], "alias") == 0) {
 
 		// if length = 1 --> command is just "alias", prints out list
 		if(length == 1) {
-			print_list();
 			return 1;
 		}
 		// then length > 1, first checks if dangerous aliasing
@@ -157,49 +178,34 @@ int alias_mode(char** tokens, int length) {
 				|| strcmp(tokens[1], "unalias") == 0
 				|| strcmp(tokens[1], "exit") == 0) {
 			fprintf(stderr, "alias: Too dangerous to alias that.\n");
-			return 1;
+			return -1;
 		}
 		// if length = 2 --> command is "alias [name]"
 		// print node with matching alias if it exists
 		if(length == 2) {
-			struct node* alias = search(tokens[1]);
-			if(alias == NULL) { }
-			else {
-				print_node(alias);
-			}
-			return 1;
+			return 2;
 		}
 		// otherwise, length > 2 --> add alias
-		// or command if alias already exists
+		// or update command if alias already exists
 		else {
-			struct node* dupe = search(tokens[1]);
-			if(dupe == NULL)
-				add_alias(tokens[1], (char**)&tokens[2], length-2);
-			else
-				update_alias(dupe, (char**)&tokens[2], length-2);
-			return 1;
+			return 3;
 		}
 	}
 
 	// first token is unalias
-	else if(strcmp(tokens[0], "unalias") != 0) {
+	else if(strcmp(tokens[0], "unalias") == 0) {
 		// checks if command is just "unalias" or has too many arguments
 		if(length != 2) {
 			printf("unalias: Incorrect number of arguments.\n");
-			return 1;
+			return -1;
 		}
 		// otherwise, unaliases
 		else {
-			struct node* dupe = search(tokens[1]);
-			if(dupe == NULL) { }
-			else
-				remove_alias(tokens[1]);
-			return 1;
+			return 4;
 		}
 	}
 	return 0;
 }
-
 /*
  * Takes in the token array and removes all arguments after including and after the redirection operator. 
  * Appends a null character at the end. Goal: Correct array for execv to use when redirection is enabled
@@ -319,6 +325,7 @@ int main(int argc, char **argv) {
         if (!batchMode) {
             write(1, "mysh> ", 7); 
         }
+	char **tokens = NULL;
         char    *linePtr = NULL;
         size_t   lineSize = 0;
         ssize_t  lineLength;
@@ -355,9 +362,68 @@ int main(int argc, char **argv) {
         int doAliasing = alias_mode(tokens, numArgs);
         printf("alias result: %d\n", doAliasing);
         printf("num args: %d\n", numArgs);
-        if (doAliasing) {
+        printf("head	: %p\n", head);
+        printf("head	: %p\n", next->head);
+        fflush(stdout);
+        if (doAliasing == -1) {
+            printf("error encountered\n");
+            fflush(stdout);
             _exit(1);
         }
+        if (doAliasing == 1) {
+            printf("printing list\n");
+            fflush(stdout);
+            print_list();
+            _exit(1);
+        }
+        if (doAliasing == 2) {
+            printf("printing alias\n");
+            fflush(stdout);
+            struct node* alias = search(tokens[1]);
+            if(alias == NULL) { }
+            else
+                print_node(alias);
+            _exit(1);
+        }
+        if (doAliasing == 3) {
+            printf("adding or updating alias\n");
+            fflush(stdout);
+            char** command = &tokens[2];
+            struct node* dupe = search(tokens[1]);
+            if(dupe == NULL) {
+                struct node* newNode = (struct node*) malloc(sizeof(struct node));
+
+                printf("head	: %p\n", head);
+                printf("newNode	: %p\n", newNode);
+
+                newNode->alias = strdup(tokens[1]);
+
+                char** dupeCommand = (char**) malloc(sizeof(char*) * numArgs-2);
+                for(int i = 0; i < numArgs-2; i++) {
+                    dupeCommand[i] = strdup(command[i]);
+                }
+                newNode->command = dupeCommand;
+                newNode->commandLength = numArgs-2;
+                newNode->next = head;
+                head = newNode;
+                printf("next	: %p\n", newNode->next);
+            }
+            else
+                update_alias(dupe, (char**)&tokens[2], numArgs-2);
+            _exit(1);
+        }
+        if (doAliasing == 4) {
+            printf("removing alias\n");
+            fflush(stdout);
+            struct node* dupe = search(tokens[1]);
+            if(dupe == NULL) { }
+            else
+                remove_alias(tokens[1]);
+            _exit(1);
+        }
+
+        print_node(head);
+
         // ---------------------------------------------
         int indexToken = file_redirection(tokens, numArgs);
         if (indexToken == -1) {
