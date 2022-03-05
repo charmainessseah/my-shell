@@ -412,23 +412,12 @@ int main(int argc, char **argv) {
             goto CLEANUP;
         }
     //    print_node(head);
-//        printf("no aliasing, proceeding\n");
         // ---------------------------------------------
-        // redirection here
+        // checck for invalid redirection here
         int indexToken = file_redirection(tokens, numArgs);
         if (indexToken == -1) {
             _exit(1); // invalid command - do not execute
         }
-        //TODO: check user permissions for writing to file
-        if (indexToken != 0) { // redirection command
-            printf("redirection enabled\n");
-            //if (!access(tokens[indexToken], W_OK)) { // check user permissions
-                //TODO: test output formatting
-            //    write(1, "Cannot write to file ", 22); 
-            //    write(1, tokens[indexToken], strlen(tokens[indexToken]) + 1);
-            //    write(1, "\n", 2);
-           // }
-        } 
         // --------------------------------------------------------
         // create child process
         int status;
@@ -442,13 +431,20 @@ int main(int argc, char **argv) {
                 close(1);
                 fpChild = fopen(tokens[indexToken], "w");
                 open(tokens[indexToken], O_WRONLY);
-                 execv(childArgv[0], childArgv);
+                if (access(tokens[indexToken], W_OK)) { // check user permissions
+                    write(1, "Cannot write to file ", 22); 
+                    write(1, tokens[indexToken], strlen(tokens[indexToken]) + 1);
+                    write(1, "\n", 2);
+                    goto CLEANUP;
+                }   
+                execv(childArgv[0], childArgv);
             } else { // regular command, no redirection
                 execv(tokens[0], tokens);
             }
         // --------------------------------------------------------
-        write(STDERR_FILENO, "job: Command not found.\n", 25);
-        _exit(1); // this means execv() fails
+            // execv failed so we exit
+            write(STDERR_FILENO, "job: Command not found.\n", 25);
+            _exit(1); // this means execv() fails
         } else {
             // parent process
             int pid = retVal;
