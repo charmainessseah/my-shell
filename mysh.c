@@ -217,7 +217,7 @@ void handle_child_argv(char **tokens, char **childArgv, int tokenLength) {
     childArgv[tokenLength - 1] = NULL;
 }
 /*
- * Returns the index of the file to redirect to in tokens array. Returns -1 if invalid command, 0 otherwise
+ * Returns the index of the file to redirect to in tokens array. Returns -1 if invalid redirection command, 0 if not a redirection command
  */
 int file_redirection(char **tokens, int numArgs) {
     int numRedirectionOperators = 0;
@@ -325,7 +325,7 @@ int main(int argc, char **argv) {
         if (!batchMode) {
             write(1, "mysh> ", 7); 
         }
-	char **tokens = NULL;
+    	char **tokens = NULL;
         char    *linePtr = NULL;
         size_t   lineSize = 0;
         ssize_t  lineLength;
@@ -343,19 +343,9 @@ int main(int argc, char **argv) {
         if (batchMode) { // echo user command
             write(1, linePtr, lineLength);
         }
-        // create a new process
-        int status;
-        int retVal = fork();
-        if (retVal == 0) {
 	    if(linePtr[lineLength - 1] == '\n')
                 linePtr[lineLength - 1] = '\0';
         tokens = malloc(sizeof(char*) * 512);
-        /*****
-        modified this section such that file_redirection returns 3 diff values - see function header
-        numArgs gets the number of arguments from user input
-        have yet to check for user permissions first on line 179
-        issues: output is still not being redirected to the output file
-        ****/
         int numArgs = parse_command(tokens, linePtr);
         //----------------------------------------------
         // test for aliasing here
@@ -363,18 +353,18 @@ int main(int argc, char **argv) {
         printf("alias result: %d\n", doAliasing);
         printf("num args: %d\n", numArgs);
         printf("head	: %p\n", head);
-        printf("head	: %p\n", next->head);
+       // printf("head	: %p\n", next->head);
         fflush(stdout);
         if (doAliasing == -1) {
             printf("error encountered\n");
             fflush(stdout);
-            _exit(1);
-        }
+            goto CLEANUP;
+         }
         if (doAliasing == 1) {
             printf("printing list\n");
             fflush(stdout);
             print_list();
-            _exit(1);
+            goto CLEANUP;
         }
         if (doAliasing == 2) {
             printf("printing alias\n");
@@ -383,7 +373,7 @@ int main(int argc, char **argv) {
             if(alias == NULL) { }
             else
                 print_node(alias);
-            _exit(1);
+            goto CLEANUP;
         }
         if (doAliasing == 3) {
             printf("adding or updating alias\n");
@@ -410,7 +400,7 @@ int main(int argc, char **argv) {
             }
             else
                 update_alias(dupe, (char**)&tokens[2], numArgs-2);
-            _exit(1);
+            goto CLEANUP;
         }
         if (doAliasing == 4) {
             printf("removing alias\n");
@@ -419,37 +409,43 @@ int main(int argc, char **argv) {
             if(dupe == NULL) { }
             else
                 remove_alias(tokens[1]);
-            _exit(1);
+            goto CLEANUP;
         }
-
-        print_node(head);
-
+    //    print_node(head);
+//        printf("no aliasing, proceeding\n");
         // ---------------------------------------------
+        // redirection here
         int indexToken = file_redirection(tokens, numArgs);
         if (indexToken == -1) {
             _exit(1); // invalid command - do not execute
         }
-        if (indexToken != 0) {
-            close(1); //close stdout
-            if (access(tokens[indexToken], W_OK)) { // check user permissions
-                open(tokens[indexToken], O_WRONLY);
-            } else {
+        //TODO: check user permissions for writing to file
+        if (indexToken != 0) { // redirection command
+            printf("redirection enabled\n");
+            //if (!access(tokens[indexToken], W_OK)) { // check user permissions
                 //TODO: test output formatting
-                write(1, "Cannot write to file ", 22); 
-                write(1, tokens[indexToken], strlen(tokens[indexToken]) + 1);
-                write(1, "\n", 2);
-            }
+            //    write(1, "Cannot write to file ", 22); 
+            //    write(1, tokens[indexToken], strlen(tokens[indexToken]) + 1);
+            //    write(1, "\n", 2);
+           // }
         } 
         // --------------------------------------------------------
-        // we want it such that tokens being passed into execv only contains the command before > as file redirection is taken care of
-        childArgv = malloc(sizeof(char*) * 512);
-        handle_child_argv(tokens, childArgv, indexToken);
-        if (indexToken != 0) {
-            fpChild = fopen(tokens[indexToken], "w");
-            execv(childArgv[0], childArgv);
-        } else {
-            execv(tokens[0], tokens);
-        }
+        // create child process
+        int status;
+        int retVal = fork();
+        if (retVal == 0) {
+            if (indexToken != 0) { // handle redirection
+                // we create a new childAgrv to remove all tokens including the redirection token and what comes after
+                // we want it such that tokens being passed into execv only contains the command before > as file redirection is taken care of
+                childArgv = malloc(sizeof(char*) * 512);
+                handle_child_argv(tokens, childArgv, indexToken);
+                close(1);
+                fpChild = fopen(tokens[indexToken], "w");
+                open(tokens[indexToken], O_WRONLY);
+                 execv(childArgv[0], childArgv);
+            } else { // regular command, no redirection
+                execv(tokens[0], tokens);
+            }
         // --------------------------------------------------------
         write(STDERR_FILENO, "job: Command not found.\n", 25);
         _exit(1); // this means execv() fails
@@ -458,6 +454,7 @@ int main(int argc, char **argv) {
             int pid = retVal;
             waitpid(pid, &status, 0);
         }
+ CLEANUP:
         // free up resources
         free(linePtr);
         linePtr = NULL;
