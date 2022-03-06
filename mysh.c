@@ -66,18 +66,16 @@ void print_list() {
 
 // returns node with matching alias, otherwise NULL if not found
 struct node* search(char* alias) {
-
 	if(head == NULL)
 		return NULL;
-
 	struct node* current = head;
 	while(current != NULL) {
-		if(strcmp(current->alias, alias) == 0)
+		if(strcmp(current->alias, alias) == 0) {
 			return current;
+        }
 		current = current->next;
 	}
 	return NULL;
-
 }
 
 // adds a node to the list of aliases
@@ -347,13 +345,14 @@ int main(int argc, char **argv) {
                 linePtr[lineLength - 1] = '\0';
         tokens = malloc(sizeof(char*) * 512);
         int numArgs = parse_command(tokens, linePtr);
+        printf("line: %s\n", linePtr);
+        printf("numargs: %d\n", numArgs);
         //----------------------------------------------
         // test for aliasing here
         int doAliasing = alias_mode(tokens, numArgs);
         printf("alias result: %d\n", doAliasing);
         printf("num args: %d\n", numArgs);
         printf("head	: %p\n", head);
-       // printf("head	: %p\n", next->head);
         fflush(stdout);
         if (doAliasing == -1) {
             printf("error encountered\n");
@@ -411,19 +410,30 @@ int main(int argc, char **argv) {
                 remove_alias(tokens[1]);
             goto CLEANUP;
         }
-    //    print_node(head);
+        
         // ---------------------------------------------
-        // checck for invalid redirection here
+        // check for invalid redirection here
         int indexToken = file_redirection(tokens, numArgs);
         if (indexToken == -1) {
             _exit(1); // invalid command - do not execute
         }
         // --------------------------------------------------------
+        // check if input is an alias
+        int execAlias = 0;
+        struct node* alias;
+        printf("token: %s\n", tokens[0]);
+        alias = search(tokens[0]);
+        if (alias != NULL) {
+            execAlias = 1;
+        }
         // create child process
         int status;
         int retVal = fork();
         if (retVal == 0) {
-            if (indexToken != 0) { // handle redirection
+            if (execAlias) {
+                tokens[0] = alias->command[0];
+                execv(tokens[0], tokens);
+            }else if (indexToken != 0) { // handle redirection
                 // we create a new childAgrv to remove all tokens including the redirection token and what comes after
                 // we want it such that tokens being passed into execv only contains the command before > as file redirection is taken care of
                 childArgv = malloc(sizeof(char*) * 512);
