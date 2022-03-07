@@ -122,9 +122,13 @@ void update_alias(struct node* node, char** command, int length) {
 	char** dupeCommand = (char**) malloc(sizeof(char*) * length);
 	for(int i = 0; i < length; i++) {
 		dupeCommand[i] = strdup(command[i]);
+		free(node->command[i]);
 	}
+	free(node->command);
 	node->command = dupeCommand;
 	node->commandLength = length;
+
+        
 
 }
 
@@ -277,6 +281,7 @@ int parse_command(char** tokens, char* line) {
 
 void init_shell()
 {
+	/*
     write(1, "\n\n\n\n******************"
         "************************", 47);
     write(1, "\n\n\n\t****WELCOME TO****\n", 24);
@@ -287,6 +292,7 @@ void init_shell()
     write(1, "\n\nHello ", 9);
     write(1, username, strlen(username) + 1);
     write(1, "\n", 2);
+    */
     sleep(1);
 }
 
@@ -297,7 +303,7 @@ int main(int argc, char **argv) {
     if (argc == 2) {
         batchMode = 1;
     } else if (argc > 2) {
-        write(STDERR_FILENO, "Usage: mysh [batch-file]\n", 26);
+        write(STDERR_FILENO, "Usage: mysh [batch-file]\n", 25);
         _exit(1);
     }
     FILE *fp = NULL;
@@ -308,9 +314,9 @@ int main(int argc, char **argv) {
         fp = stdin;
     }
     if (fp == NULL && batchMode) {
-        write(STDERR_FILENO, "Error: Cannot open file ", 25);
-        write(STDERR_FILENO, argv[1], strlen(argv[1]) + 1);
-        write(STDERR_FILENO, "\n", 2);
+        write(STDERR_FILENO, "Error: Cannot open file ", 24);
+        write(STDERR_FILENO, argv[1], strlen(argv[1]));
+        write(STDERR_FILENO, ".\n", 2);
         _exit(1);
     }
     if (fp == NULL) {
@@ -321,7 +327,7 @@ int main(int argc, char **argv) {
     char **childArgv = NULL;
     while (1) {
         if (!batchMode) {
-            write(1, "mysh> ", 7); 
+            write(1, "mysh> ", 6); 
         }
     	char **tokens = NULL;
         char    *linePtr = NULL;
@@ -329,14 +335,14 @@ int main(int argc, char **argv) {
         ssize_t  lineLength;
         lineLength = getline(&linePtr, &lineSize, fp);
         if (linePtr == NULL || lineLength == -1) {
-            write(1, "exiting shell...\n", 18);
+            write(1, "exit\n", 5);
             fclose(fp);
-            _exit(1);
+            _exit(0);
         }
         int result = strcmp(linePtr, "exit\n");
         if (!result) {
-            write(1, "exiting shell...\n", 18);
-            _exit(1);
+            write(1, "exit\n", 5);
+            _exit(0);
         }
         if (batchMode) { // echo user command
             write(1, linePtr, lineLength);
@@ -350,24 +356,24 @@ int main(int argc, char **argv) {
         //----------------------------------------------
         // test for aliasing here
         int doAliasing = alias_mode(tokens, numArgs);
-        printf("alias result: %d\n", doAliasing);
-        printf("num args: %d\n", numArgs);
-        printf("head	: %p\n", head);
-        fflush(stdout);
+        //printf("alias result: %d\n", doAliasing);
+        //printf("num args: %d\n", numArgs);
+        //printf("head	: %p\n", head);
+        //fflush(stdout);
         if (doAliasing == -1) {
-            printf("error encountered\n");
-            fflush(stdout);
+            //printf("error encountered\n");
+            //fflush(stdout);
             goto CLEANUP;
          }
         if (doAliasing == 1) {
-            printf("printing list\n");
-            fflush(stdout);
+            //printf("printing list\n");
+            //fflush(stdout);
             print_list();
             goto CLEANUP;
         }
         if (doAliasing == 2) {
-            printf("printing alias\n");
-            fflush(stdout);
+            //printf("printing alias\n");
+            //fflush(stdout);
             struct node* alias = search(tokens[1]);
             if(alias == NULL) { }
             else
@@ -375,15 +381,15 @@ int main(int argc, char **argv) {
             goto CLEANUP;
         }
         if (doAliasing == 3) {
-            printf("adding or updating alias\n");
-            fflush(stdout);
+            //printf("adding or updating alias\n");
+            //fflush(stdout);
             char** command = &tokens[2];
             struct node* dupe = search(tokens[1]);
             if(dupe == NULL) {
                 struct node* newNode = (struct node*) malloc(sizeof(struct node));
 
-                printf("head	: %p\n", head);
-                printf("newNode	: %p\n", newNode);
+                //printf("head	: %p\n", head);
+                //printf("newNode	: %p\n", newNode);
 
                 newNode->alias = strdup(tokens[1]);
 
@@ -395,15 +401,18 @@ int main(int argc, char **argv) {
                 newNode->commandLength = numArgs-2;
                 newNode->next = head;
                 head = newNode;
-                printf("next	: %p\n", newNode->next);
+                //printf("next	: %p\n", newNode->next);
             }
-            else
-                update_alias(dupe, (char**)&tokens[2], numArgs-2);
+            else {
+                //printf("updatingn alias \n");
+		//printf("%p", dupe);
+		update_alias(dupe, (char**)&tokens[2], numArgs-2);
+	    }
             goto CLEANUP;
         }
         if (doAliasing == 4) {
-            printf("removing alias\n");
-            fflush(stdout);
+            //printf("removing alias\n");
+            //fflush(stdout);
             struct node* dupe = search(tokens[1]);
             if(dupe == NULL) { }
             else
@@ -421,7 +430,7 @@ int main(int argc, char **argv) {
         // check if input is an alias
         int execAlias = 0;
         struct node* alias;
-        printf("token: %s\n", tokens[0]);
+        //printf("token: %s\n", tokens[0]);
         alias = search(tokens[0]);
         if (alias != NULL) {
             execAlias = 1;
@@ -431,8 +440,8 @@ int main(int argc, char **argv) {
         int retVal = fork();
         if (retVal == 0) {
             if (execAlias) {
-                tokens[0] = alias->command[0];
-                execv(tokens[0], tokens);
+                //tokens = alias->command;
+                execv(alias->command[0], alias->command);
             }else if (indexToken != 0) { // handle redirection
                 // we create a new childAgrv to remove all tokens including the redirection token and what comes after
                 // we want it such that tokens being passed into execv only contains the command before > as file redirection is taken care of
@@ -442,9 +451,9 @@ int main(int argc, char **argv) {
                 fpChild = fopen(tokens[indexToken], "w");
                 open(tokens[indexToken], O_WRONLY);
                 if (access(tokens[indexToken], W_OK)) { // check user permissions
-                    write(1, "Cannot write to file ", 22); 
-                    write(1, tokens[indexToken], strlen(tokens[indexToken]) + 1);
-                    write(1, "\n", 2);
+                    write(1, "Cannot write to file ", 21); 
+                    write(1, tokens[indexToken], strlen(tokens[indexToken]));
+                    write(1, "\n", 1);
                     goto CLEANUP;
                 }   
                 execv(childArgv[0], childArgv);
@@ -453,7 +462,7 @@ int main(int argc, char **argv) {
             }
         // --------------------------------------------------------
             // execv failed so we exit
-            write(STDERR_FILENO, "job: Command not found.\n", 25);
+            write(STDERR_FILENO, "job: Command not found.\n", 24);
             _exit(1); // this means execv() fails
         } else {
             // parent process
