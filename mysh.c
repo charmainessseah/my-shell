@@ -329,6 +329,7 @@ int main(int argc, char **argv) {
     }
     char **tokens = NULL;
     char **childArgv = NULL;
+   char **newCommand = NULL;
     int exit = 0;
     while (1) {
         if (exit) {
@@ -462,7 +463,17 @@ int main(int argc, char **argv) {
         if (retVal == 0) {
             if (execAlias) {
                 //TODO: this line below was passing test 17, 18, 19 but it actually was not working as expected for echo and cat alias
-                execv(alias->command[0], alias->command);
+                newCommand = malloc(sizeof(char*) * 512);
+                printf("command length: %d\n", alias->commandLength);
+                for (int i = 0; i < (alias->commandLength); i++) {
+                    newCommand[i] = alias->command[i];
+                }
+                int currIndex = alias->commandLength;
+                for (int i = 0; i < numArgs - 1; i++) {
+                    newCommand[currIndex++] = tokens[i + 1];
+                }
+                newCommand[currIndex] = NULL;
+                execv(alias->command[0], newCommand);
             }else if (indexToken != 0) { // handle redirection
                 // we create a new childAgrv to remove all tokens including the redirection token and what comes after
                 // we want it such that tokens being passed into execv only contains the command before > as file redirection is taken care of
@@ -512,6 +523,12 @@ int main(int argc, char **argv) {
         }                
         free(tokens);
     }
+//    if (newCommand != NULL) {
+//         for(int i = 0; i < 512; i++) {
+//             free(newCommand[i]);
+//         }
+//         free(newCommand);
+//     }
     if (childArgv != NULL) {
         for (int i = 0; i < 512; i++) {
             free(childArgv[i]);
