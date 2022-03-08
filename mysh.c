@@ -232,7 +232,9 @@ int file_redirection(char **tokens, int numArgs) {
     }
 
     int invalidRedirection = 0;
-    if (numRedirectionOperators == 1) {
+    if (redirectionOperatorIndex == 0) {
+        invalidRedirection = 1;
+    } else if (numRedirectionOperators == 1) {
         // check that only one file is specified to the right of the redirection op
         if (redirectionOperatorIndex == numArgs - 2) {
             return redirectionOperatorIndex + 1;
@@ -242,7 +244,7 @@ int file_redirection(char **tokens, int numArgs) {
         invalidRedirection = 1;
     } 
     if (invalidRedirection) {
-        write(1, "Redirection misformatted.\n", 26);
+        write(STDERR_FILENO, "Redirection misformatted.\n", 26);
         return -1;
     }
     return 0;
@@ -279,21 +281,19 @@ int parse_command(char** tokens, char* line) {
     return numArgs;
 }
 
-void init_shell()
-{
-	/*
-    write(1, "\n\n\n\n******************"
-        "************************", 47);
-    write(1, "\n\n\n\t****WELCOME TO****\n", 24);
-    write(1, "\t*****MY SHELL*****", 20);
-    write(1, "\n\n\n*******************"
-        "***********************", 46);
-    char* username = getenv("USER");
-    write(1, "\n\nHello ", 9);
-    write(1, username, strlen(username) + 1);
-    write(1, "\n", 2);
-    */
-    sleep(1);
+int parse_tokens_for_redirection(char** tokensBefore, char** tokensAfter, int numArgs) {
+   // char *tokenBefore;
+   // char *tokenAfter;
+   // int tokensAfterIndex = 0;
+    for (int i = 0; i < numArgs; i++) {
+        //printf("token[%d]: %s\n", i, tokensBefore[i]);
+        for (int j = 0; j < strlen(tokensBefore[i]); j++) {
+            //printf("token[%d][%d]: %c ", i, j, tokensBefore[i][j]);
+            if (tokensBefore[i][j] == '>'){}
+        }
+    }
+    
+    return 0;    
 }
 
 int main(int argc, char **argv) {
@@ -322,7 +322,7 @@ int main(int argc, char **argv) {
     if (fp == NULL) {
         _exit(1);
     }
-    init_shell();
+    //char **tokensBefore = NULL;
     char **tokens = NULL;
     char **childArgv = NULL;
     while (1) {
@@ -335,24 +335,28 @@ int main(int argc, char **argv) {
         ssize_t  lineLength;
         lineLength = getline(&linePtr, &lineSize, fp);
         if (linePtr == NULL || lineLength == -1) {
-            write(1, "exit\n", 5);
             fclose(fp);
             _exit(0);
         }
         int result = strcmp(linePtr, "exit\n");
-        if (!result) {
-            write(1, "exit\n", 5);
-            _exit(0);
-        }
         if (batchMode) { // echo user command
             write(1, linePtr, lineLength);
         }
-	    if(linePtr[lineLength - 1] == '\n')
-                linePtr[lineLength - 1] = '\0';
+
+        if (!result) {
+            _exit(0);
+        } 
+        if(linePtr[lineLength - 1] == '\n')
+            linePtr[lineLength - 1] = '\0';
+        //tokensBefore = malloc(sizeof(char*) * 512);
         tokens = malloc(sizeof(char*) * 512);
         int numArgs = parse_command(tokens, linePtr);
-        printf("line: %s\n", linePtr);
-        printf("numargs: %d\n", numArgs);
+        //parse_tokens_for_redirection(tokens, tokensBefore, numArgs);
+        //for(int i = 0; i < numArgs; i++) {
+        //    printf("token[%d]: %s\n", i, tokens[i]);
+       // }
+       // printf("line: %s\n", linePtr);
+       // printf("numargs: %d\n", numArgs);
         //----------------------------------------------
         // test for aliasing here
         int doAliasing = alias_mode(tokens, numArgs);
@@ -424,7 +428,7 @@ int main(int argc, char **argv) {
         // check for invalid redirection here
         int indexToken = file_redirection(tokens, numArgs);
         if (indexToken == -1) {
-            _exit(1); // invalid command - do not execute
+           goto CLEANUP;
         }
         // --------------------------------------------------------
         // check if input is an alias
@@ -462,7 +466,8 @@ int main(int argc, char **argv) {
             }
         // --------------------------------------------------------
             // execv failed so we exit
-            write(STDERR_FILENO, "job: Command not found.\n", 24);
+            write(STDERR_FILENO, tokens[0], strlen(tokens[0]));
+            write(STDERR_FILENO, ": Command not found.\n", 21);
             _exit(1); // this means execv() fails
         } else {
             // parent process
@@ -488,6 +493,13 @@ int main(int argc, char **argv) {
         }                
         free(tokens);
     }
+    //if (tokensBefore != NULL) {
+    //    for(int i = 0; i < 512; i++) {
+    //         free(tokensBefore[i]);
+    //     }
+    //     free(tokensBefore);
+   // }
+
     if (childArgv != NULL) {
         for (int i = 0; i < 512; i++) {
             free(childArgv[i]);
