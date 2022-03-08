@@ -325,7 +325,11 @@ int main(int argc, char **argv) {
     //char **tokensBefore = NULL;
     char **tokens = NULL;
     char **childArgv = NULL;
+    int exit = 0;
     while (1) {
+        if (exit) {
+            _exit(0);
+        }
         if (!batchMode) {
             write(1, "mysh> ", 6); 
         }
@@ -336,7 +340,9 @@ int main(int argc, char **argv) {
         lineLength = getline(&linePtr, &lineSize, fp);
         if (linePtr == NULL || lineLength == -1) {
             fclose(fp);
-            _exit(0);
+            exit = 1;
+            goto CLEANUP;
+     // here       //_exit(0);
         }
         int result = strcmp(linePtr, "exit\n");
         if (batchMode) { // echo user command
@@ -344,13 +350,19 @@ int main(int argc, char **argv) {
         }
 
         if (!result) {
-            _exit(0);
+            exit = 1;
+            goto CLEANUP;
+         // here   //   _exit(0);
         } 
         if(linePtr[lineLength - 1] == '\n')
             linePtr[lineLength - 1] = '\0';
         //tokensBefore = malloc(sizeof(char*) * 512);
         tokens = malloc(sizeof(char*) * 512);
         int numArgs = parse_command(tokens, linePtr);
+        
+        if (numArgs == 0) { // empty command
+            goto CLEANUP;
+        }
         //parse_tokens_for_redirection(tokens, tokensBefore, numArgs);
         //for(int i = 0; i < numArgs; i++) {
         //    printf("token[%d]: %s\n", i, tokens[i]);
@@ -438,13 +450,14 @@ int main(int argc, char **argv) {
         alias = search(tokens[0]);
         if (alias != NULL) {
             execAlias = 1;
+            printf("this is an alias command 1\n");
         }
         // create child process
         int status;
         int retVal = fork();
         if (retVal == 0) {
             if (execAlias) {
-                //tokens = alias->command;
+                //TODO: this line below was passing test 17, 18, 19 but it actually was not working as expected for echo and cat alias
                 execv(alias->command[0], alias->command);
             }else if (indexToken != 0) { // handle redirection
                 // we create a new childAgrv to remove all tokens including the redirection token and what comes after
@@ -468,7 +481,9 @@ int main(int argc, char **argv) {
             // execv failed so we exit
             write(STDERR_FILENO, tokens[0], strlen(tokens[0]));
             write(STDERR_FILENO, ": Command not found.\n", 21);
-            _exit(1); // this means execv() fails
+            exit = 1;
+            goto CLEANUP;
+  // here          //_exit(1); // this means execv() fails
         } else {
             // parent process
             int pid = retVal;
