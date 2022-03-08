@@ -299,6 +299,11 @@ int parse_tokens_for_redirection(char** tokensBefore, char** tokensAfter, int nu
 int main(int argc, char **argv) {
     //TODO: the command <./mysh .> starts up shell interactive mode and exits right away. It should return
     // <Error: Cannot open file .>
+    //TODO: fix redirection to account for no spaces in between >
+        // eg, /bin/echo hello world>tests-out/tmp.txt
+        // eg, /bin/echo hello world >tests-out/tmp.txt
+        // eg, /bin/echo hello world> tests-out/tmp.txt
+    //TODO: fix using an alias for certain commands like cat and echo
     int batchMode = 0;
     if (argc == 2) {
         batchMode = 1;
@@ -322,7 +327,6 @@ int main(int argc, char **argv) {
     if (fp == NULL) {
         _exit(1);
     }
-    //char **tokensBefore = NULL;
     char **tokens = NULL;
     char **childArgv = NULL;
     int exit = 0;
@@ -508,13 +512,6 @@ int main(int argc, char **argv) {
         }                
         free(tokens);
     }
-    //if (tokensBefore != NULL) {
-    //    for(int i = 0; i < 512; i++) {
-    //         free(tokensBefore[i]);
-    //     }
-    //     free(tokensBefore);
-   // }
-
     if (childArgv != NULL) {
         for (int i = 0; i < 512; i++) {
             free(childArgv[i]);
