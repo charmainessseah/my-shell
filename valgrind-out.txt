@@ -1,0 +1,275 @@
+==992196== Memcheck, a memory error detector
+==992196== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==992196== Using Valgrind-3.15.0-608cb11914-20190413 and LibVEX; rerun with -h for copyright info
+==992196== Command: ./mysh
+==992196== Parent PID: 991828
+==992196== 
+--992196-- 
+--992196-- Valgrind options:
+--992196--    --leak-check=full
+--992196--    --show-leak-kinds=all
+--992196--    --track-origins=yes
+--992196--    --verbose
+--992196--    --log-file=valgrind-out.txt
+--992196-- Contents of /proc/version:
+--992196--   Linux version 5.4.0-100-generic (buildd@lcy02-amd64-002) (gcc version 9.3.0 (Ubuntu 9.3.0-17ubuntu1~20.04)) #113-Ubuntu SMP Thu Feb 3 18:43:29 UTC 2022
+--992196-- 
+--992196-- Arch and hwcaps: AMD64, LittleEndian, amd64-cx16-lzcnt-rdtscp-sse3-ssse3-avx-avx2-bmi-f16c-rdrand
+--992196-- Page sizes: currently 4096, max supported 4096
+--992196-- Valgrind library directory: /usr/lib/x86_64-linux-gnu/valgrind
+--992196-- Reading syms from /afs/cs.wisc.edu/u/e/x/exia/private/CS537/Project2-Shell/my-shell/mysh
+--992196-- Reading syms from /usr/lib/x86_64-linux-gnu/ld-2.31.so
+--992196--   Considering /usr/lib/x86_64-linux-gnu/ld-2.31.so ..
+--992196--   .. CRC mismatch (computed 0306b78c wanted 8d362b37)
+--992196--   Considering /lib/x86_64-linux-gnu/ld-2.31.so ..
+--992196--   .. CRC mismatch (computed 0306b78c wanted 8d362b37)
+--992196--   Considering /usr/lib/debug/lib/x86_64-linux-gnu/ld-2.31.so ..
+--992196--   .. CRC is valid
+--992196-- Reading syms from /usr/lib/x86_64-linux-gnu/valgrind/memcheck-amd64-linux
+--992196--    object doesn't have a symbol table
+--992196--    object doesn't have a dynamic symbol table
+--992196-- Scheduler: using generic scheduler lock implementation.
+--992196-- Reading suppressions file: /usr/lib/x86_64-linux-gnu/valgrind/default.supp
+==992196== embedded gdbserver: reading from /tmp/vgdb-pipe-from-vgdb-to-992196-by-exia-on-
+==992196== embedded gdbserver: writing to   /tmp/vgdb-pipe-to-vgdb-from-992196-by-exia-on-
+==992196== embedded gdbserver: shared mem   /tmp/vgdb-pipe-shared-mem-vgdb-992196-by-exia-on-
+==992196== 
+==992196== TO CONTROL THIS PROCESS USING vgdb (which you probably
+==992196== don't want to do, unless you know exactly what you're doing,
+==992196== or are doing some strange experiment):
+==992196==   /usr/lib/x86_64-linux-gnu/valgrind/../../bin/vgdb --pid=992196 ...command...
+==992196== 
+==992196== TO DEBUG THIS PROCESS USING GDB: start GDB like this
+==992196==   /path/to/gdb ./mysh
+==992196== and then give GDB the following command
+==992196==   target remote | /usr/lib/x86_64-linux-gnu/valgrind/../../bin/vgdb --pid=992196
+==992196== --pid is optional if only one valgrind process is running
+==992196== 
+--992196-- REDIR: 0x4022e10 (ld-linux-x86-64.so.2:strlen) redirected to 0x580c9ce2 (???)
+--992196-- REDIR: 0x4022be0 (ld-linux-x86-64.so.2:index) redirected to 0x580c9cfc (???)
+--992196-- Reading syms from /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_core-amd64-linux.so
+--992196--    object doesn't have a symbol table
+--992196-- Reading syms from /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so
+--992196--    object doesn't have a symbol table
+==992196== WARNING: new redirection conflicts with existing -- ignoring it
+--992196--     old: 0x04022e10 (strlen              ) R-> (0000.0) 0x580c9ce2 ???
+--992196--     new: 0x04022e10 (strlen              ) R-> (2007.0) 0x0483f060 strlen
+--992196-- REDIR: 0x401f5f0 (ld-linux-x86-64.so.2:strcmp) redirected to 0x483ffd0 (strcmp)
+--992196-- REDIR: 0x4023370 (ld-linux-x86-64.so.2:mempcpy) redirected to 0x4843a20 (mempcpy)
+--992196-- Reading syms from /usr/lib/x86_64-linux-gnu/libc-2.31.so
+--992196--   Considering /usr/lib/x86_64-linux-gnu/libc-2.31.so ..
+--992196--   .. CRC mismatch (computed ef41b1a0 wanted f854b801)
+--992196--   Considering /lib/x86_64-linux-gnu/libc-2.31.so ..
+--992196--   .. CRC mismatch (computed ef41b1a0 wanted f854b801)
+--992196--   Considering /usr/lib/debug/lib/x86_64-linux-gnu/libc-2.31.so ..
+--992196--   .. CRC is valid
+--992196-- REDIR: 0x490a4b0 (libc.so.6:memmove) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x49097b0 (libc.so.6:strncpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x490a7e0 (libc.so.6:strcasecmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x49090d0 (libc.so.6:strcat) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x4909810 (libc.so.6:rindex) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x490bc80 (libc.so.6:rawmemchr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x4926d10 (libc.so.6:wmemchr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x4926850 (libc.so.6:wcscmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x490a610 (libc.so.6:mempcpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x490a440 (libc.so.6:bcmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x4909740 (libc.so.6:strncmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x4909180 (libc.so.6:strcmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x490a570 (libc.so.6:memset) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x4926810 (libc.so.6:wcschr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x49096a0 (libc.so.6:strnlen) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x4909260 (libc.so.6:strcspn) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x490a830 (libc.so.6:strncasecmp) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x4909200 (libc.so.6:strcpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x490a980 (libc.so.6:memcpy@@GLIBC_2.14) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x4927f80 (libc.so.6:wcsnlen) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x4926890 (libc.so.6:wcscpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x4909850 (libc.so.6:strpbrk) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x4909130 (libc.so.6:index) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x4909660 (libc.so.6:strlen) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x4912bd0 (libc.so.6:memrchr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x490a880 (libc.so.6:strcasecmp_l) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x490a400 (libc.so.6:memchr) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x4926960 (libc.so.6:wcslen) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x4909b10 (libc.so.6:strspn) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x490a780 (libc.so.6:stpncpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x490a720 (libc.so.6:stpcpy) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x490bcc0 (libc.so.6:strchrnul) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x490a8d0 (libc.so.6:strncasecmp_l) redirected to 0x48311d0 (_vgnU_ifunc_wrapper)
+--992196-- REDIR: 0x49f2410 (libc.so.6:__strrchr_avx2) redirected to 0x483ea10 (rindex)
+--992196-- REDIR: 0x4904110 (libc.so.6:malloc) redirected to 0x483b780 (malloc)
+--992196-- REDIR: 0x49ee440 (libc.so.6:__memchr_avx2) redirected to 0x4840050 (memchr)
+--992196-- REDIR: 0x49f55f0 (libc.so.6:__memcpy_avx_unaligned_erms) redirected to 0x48429f0 (memmove)
+--992196-- REDIR: 0x49edae0 (libc.so.6:__strcmp_avx2) redirected to 0x483fed0 (strcmp)
+--992196-- REDIR: 0x49ed9b0 (libc.so.6:__strspn_sse42) redirected to 0x4843ef0 (strspn)
+--992196-- REDIR: 0x49ed730 (libc.so.6:__strcspn_sse42) redirected to 0x4843e10 (strcspn)
+--992196-- REDIR: 0x49f25e0 (libc.so.6:__strlen_avx2) redirected to 0x483ef40 (strlen)
+--992196-- REDIR: 0x4904700 (libc.so.6:free) redirected to 0x483c9d0 (free)
+--992196-- REDIR: 0x49f55d0 (libc.so.6:__mempcpy_avx_unaligned_erms) redirected to 0x4843660 (mempcpy)
+==992196== Conditional jump or move depends on uninitialised value(s)
+==992196==    at 0x483C9F5: free (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992196==    by 0x10989E: update_alias (mysh.c:126)
+==992196==    by 0x10A34E: main (mysh.c:462)
+==992196==  Uninitialised value was created by a heap allocation
+==992196==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992196==    by 0x10A28D: main (mysh.c:449)
+==992196== 
+==992196== Invalid read of size 8
+==992196==    at 0x109894: update_alias (mysh.c:126)
+==992196==    by 0x10A34E: main (mysh.c:462)
+==992196==  Address 0x4a61f88 is 2 bytes after a block of size 22 alloc'd
+==992196==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992196==    by 0x10A28D: main (mysh.c:449)
+==992196== 
+==992213== 
+==992213== HEAP SUMMARY:
+==992213==     in use at exit: 25,035 bytes in 51 blocks
+==992213==   total heap usage: 67 allocs, 16 frees, 28,000 bytes allocated
+==992213== 
+==992213== Searching for pointers to 51 not-freed blocks
+==992213== Checked 68,120 bytes
+==992213== 
+==992213== 10 bytes in 2 blocks are still reachable in loss record 1 of 12
+==992213==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992213==    by 0x49093BE: strdup (strdup.c:42)
+==992213==    by 0x109CA4: parse_command (mysh.c:276)
+==992213==    by 0x10A16A: main (mysh.c:397)
+==992213== 
+==992213== 13 bytes in 3 blocks are still reachable in loss record 2 of 12
+==992213==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992213==    by 0x49093BE: strdup (strdup.c:42)
+==992213==    by 0x10A26B: main (mysh.c:447)
+==992213== 
+==992213== 35 bytes in 5 blocks are still reachable in loss record 3 of 12
+==992213==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992213==    by 0x49093BE: strdup (strdup.c:42)
+==992213==    by 0x10A2D8: main (mysh.c:451)
+==992213== 
+==992213== 42 bytes in 7 blocks are still reachable in loss record 4 of 12
+==992213==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992213==    by 0x49093BE: strdup (strdup.c:42)
+==992213==    by 0x10987B: update_alias (mysh.c:125)
+==992213==    by 0x10A34E: main (mysh.c:462)
+==992213== 
+==992213== 53 bytes in 9 blocks are possibly lost in loss record 5 of 12
+==992213==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992213==    by 0x49093BE: strdup (strdup.c:42)
+==992213==    by 0x109CA4: parse_command (mysh.c:276)
+==992213==    by 0x10A16A: main (mysh.c:397)
+==992213== 
+==992213== 56 bytes in 1 blocks are still reachable in loss record 6 of 12
+==992213==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992213==    by 0x109839: update_alias (mysh.c:123)
+==992213==    by 0x10A34E: main (mysh.c:462)
+==992213== 
+==992213== 68 bytes in 2 blocks are still reachable in loss record 7 of 12
+==992213==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992213==    by 0x10A28D: main (mysh.c:449)
+==992213== 
+==992213== 86 bytes in 13 blocks are indirectly lost in loss record 8 of 12
+==992213==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992213==    by 0x49093BE: strdup (strdup.c:42)
+==992213==    by 0x109CA4: parse_command (mysh.c:276)
+==992213==    by 0x10A16A: main (mysh.c:397)
+==992213== 
+==992213== 96 bytes in 3 blocks are still reachable in loss record 9 of 12
+==992213==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992213==    by 0x10A254: main (mysh.c:442)
+==992213== 
+==992213== 4,096 bytes in 1 blocks are still reachable in loss record 10 of 12
+==992213==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992213==    by 0x10A153: main (mysh.c:396)
+==992213== 
+==992213== 4,096 bytes in 1 blocks are possibly lost in loss record 11 of 12
+==992213==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992213==    by 0x10A153: main (mysh.c:396)
+==992213== 
+==992213== 16,470 (16,384 direct, 86 indirect) bytes in 4 blocks are definitely lost in loss record 12 of 12
+==992213==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992213==    by 0x10A153: main (mysh.c:396)
+==992213== 
+==992213== LEAK SUMMARY:
+==992213==    definitely lost: 16,384 bytes in 4 blocks
+==992213==    indirectly lost: 86 bytes in 13 blocks
+==992213==      possibly lost: 4,149 bytes in 10 blocks
+==992213==    still reachable: 4,416 bytes in 24 blocks
+==992213==         suppressed: 0 bytes in 0 blocks
+==992213== 
+==992213== ERROR SUMMARY: 9 errors from 5 contexts (suppressed: 0 from 0)
+==992213== 
+==992213== 2 errors in context 1 of 5:
+==992213== Conditional jump or move depends on uninitialised value(s)
+==992213==    at 0x483C9F5: free (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992213==    by 0x10989E: update_alias (mysh.c:126)
+==992213==    by 0x10A34E: main (mysh.c:462)
+==992213==  Uninitialised value was created by a heap allocation
+==992213==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992213==    by 0x10A28D: main (mysh.c:449)
+==992213== 
+==992213== 
+==992213== 4 errors in context 2 of 5:
+==992213== Invalid read of size 8
+==992213==    at 0x109894: update_alias (mysh.c:126)
+==992213==    by 0x10A34E: main (mysh.c:462)
+==992213==  Address 0x4a61f88 is 2 bytes after a block of size 22 alloc'd
+==992213==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992213==    by 0x10A28D: main (mysh.c:449)
+==992213== 
+==992213== ERROR SUMMARY: 9 errors from 5 contexts (suppressed: 0 from 0)
+--992224-- REDIR: 0x49f2220 (libc.so.6:__strchrnul_avx2) redirected to 0x4843540 (strchrnul)
+==992196== 
+==992196== HEAP SUMMARY:
+==992196==     in use at exit: 37,041 bytes in 38 blocks
+==992196==   total heap usage: 82 allocs, 44 frees, 40,830 bytes allocated
+==992196== 
+==992196== Searching for pointers to 38 not-freed blocks
+==992196== Checked 67,936 bytes
+==992196== 
+==992196== 53 bytes in 9 blocks are possibly lost in loss record 1 of 4
+==992196==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992196==    by 0x49093BE: strdup (strdup.c:42)
+==992196==    by 0x109CA4: parse_command (mysh.c:276)
+==992196==    by 0x10A16A: main (mysh.c:397)
+==992196== 
+==992196== 124 bytes in 20 blocks are indirectly lost in loss record 2 of 4
+==992196==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992196==    by 0x49093BE: strdup (strdup.c:42)
+==992196==    by 0x109CA4: parse_command (mysh.c:276)
+==992196==    by 0x10A16A: main (mysh.c:397)
+==992196== 
+==992196== 4,096 bytes in 1 blocks are possibly lost in loss record 3 of 4
+==992196==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992196==    by 0x10A153: main (mysh.c:396)
+==992196== 
+==992196== 32,892 (32,768 direct, 124 indirect) bytes in 8 blocks are definitely lost in loss record 4 of 4
+==992196==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992196==    by 0x10A153: main (mysh.c:396)
+==992196== 
+==992196== LEAK SUMMARY:
+==992196==    definitely lost: 32,768 bytes in 8 blocks
+==992196==    indirectly lost: 124 bytes in 20 blocks
+==992196==      possibly lost: 4,149 bytes in 10 blocks
+==992196==    still reachable: 0 bytes in 0 blocks
+==992196==         suppressed: 0 bytes in 0 blocks
+==992196== 
+==992196== ERROR SUMMARY: 9 errors from 5 contexts (suppressed: 0 from 0)
+==992196== 
+==992196== 2 errors in context 1 of 5:
+==992196== Conditional jump or move depends on uninitialised value(s)
+==992196==    at 0x483C9F5: free (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992196==    by 0x10989E: update_alias (mysh.c:126)
+==992196==    by 0x10A34E: main (mysh.c:462)
+==992196==  Uninitialised value was created by a heap allocation
+==992196==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992196==    by 0x10A28D: main (mysh.c:449)
+==992196== 
+==992196== 
+==992196== 4 errors in context 2 of 5:
+==992196== Invalid read of size 8
+==992196==    at 0x109894: update_alias (mysh.c:126)
+==992196==    by 0x10A34E: main (mysh.c:462)
+==992196==  Address 0x4a61f88 is 2 bytes after a block of size 22 alloc'd
+==992196==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==992196==    by 0x10A28D: main (mysh.c:449)
+==992196== 
+==992196== ERROR SUMMARY: 9 errors from 5 contexts (suppressed: 0 from 0)

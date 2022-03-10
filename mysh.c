@@ -48,6 +48,7 @@ void free_node(struct node* node) {
 
 // frees the list
 void free_list() {
+	//write(1, "freeing list\n", 13);
 	while(head != NULL) {
 		struct node* current = head;
 		head = head->next;
@@ -83,8 +84,8 @@ void add_alias(char* alias, char** command, int length) {
 
 	if(head == NULL) {
 		head = (struct node*) malloc(sizeof(struct node));
-		printf("new head address		: %p\n", head);
-		printf("head's next address	: %p\n", head->next);
+		//printf("new head address		: %p\n", head);
+		//printf("head's next address	: %p\n", head->next);
 
 		head->alias = strdup(alias);
 
@@ -98,8 +99,8 @@ void add_alias(char* alias, char** command, int length) {
 	}
 	else {
 		struct node* newNode = (struct node*) malloc(sizeof(struct node));
-		printf("current head address	: %p\n", head);
-		printf("new node address		: %p\n", newNode);
+		//printf("current head address	: %p\n", head);
+		//printf("new node address		: %p\n", newNode);
 
 		newNode->alias = strdup(alias);
 
@@ -111,7 +112,7 @@ void add_alias(char* alias, char** command, int length) {
 		newNode->commandLength = length;
 		newNode->next = head;
 		head = newNode;
-		printf("new node's next address		: %p\n", newNode->next);
+		//printf("new node's next address		: %p\n", newNode->next);
 	}
 
 }
@@ -281,6 +282,33 @@ int parse_command(char** tokens, char* line) {
     return numArgs;
 }
 
+// replaces each instance of ">" with " > " so the delimiter will fit
+// the implementation of parsing tokens for redirection
+char* replace_redirection(char* original, int length) {
+	char* result;
+	int count = 0;
+	for(int i = 0; i < length; i++) {
+		if(original[i] == 0)
+			count++;
+	}
+
+	result = (char*) malloc(sizeof(char) * (length + count*2));
+
+	count = 0;
+	for(int i = 0; i < length; i++) {
+		if(original[i] != '>')
+			result[i + count*2] = original[i];
+		else {
+			result[i + count*2] = ' ';
+			result[i+1 + count*2] = '>';
+			result[i+2 + count*2] = ' ';
+			count++;
+		}
+	}
+
+	return result;
+}
+
 int parse_tokens_for_redirection(char** tokensBefore, char** tokensAfter, int numArgs) {
    // char *tokenBefore;
    // char *tokenAfter;
@@ -345,6 +373,7 @@ int main(int argc, char **argv) {
         lineLength = getline(&linePtr, &lineSize, fp);
         if (linePtr == NULL || lineLength == -1) {
             fclose(fp);
+	    free_list();
             exit = 1;
             goto CLEANUP;
      // here       //_exit(0);
@@ -356,16 +385,19 @@ int main(int argc, char **argv) {
 
         if (!result) {
             exit = 1;
+	    free_list();
             goto CLEANUP;
          // here   //   _exit(0);
         } 
         if(linePtr[lineLength - 1] == '\n')
             linePtr[lineLength - 1] = '\0';
         //tokensBefore = malloc(sizeof(char*) * 512);
+	char* converted = replace_redirection(linePtr, lineLength);
         tokens = malloc(sizeof(char*) * 512);
-        int numArgs = parse_command(tokens, linePtr);
-        
+        int numArgs = parse_command(tokens, converted);
+        free(converted);
         if (numArgs == 0) { // empty command
+	    free_list();
             goto CLEANUP;
         }
         //parse_tokens_for_redirection(tokens, tokensBefore, numArgs);
@@ -455,7 +487,7 @@ int main(int argc, char **argv) {
         alias = search(tokens[0]);
         if (alias != NULL) {
             execAlias = 1;
-            printf("this is an alias command 1\n");
+            //printf("this is an alias command 1\n");
         }
         // create child process
         int status;
@@ -506,10 +538,13 @@ int main(int argc, char **argv) {
         }
  CLEANUP:
         // free up resources
+	//printf("freeing\n");
         free(linePtr);
+	//free(converted);
         linePtr = NULL;
         lineSize = 0;
     }
+    printf("freeing 2 \n");
     // free up resources
     if (fp != NULL) {
         fclose(fp);
@@ -518,6 +553,7 @@ int main(int argc, char **argv) {
         fclose(fpChild);
     }
     if (tokens != NULL) {
+	//printf("freeing tokens\n");
         for(int i = 0; i < 512; i++) {
             free(tokens[i]); 
         }                
@@ -535,7 +571,7 @@ int main(int argc, char **argv) {
         }
         free(childArgv);
     }
-    free_list();
+    //free_list();
     return 0;
 }
 
