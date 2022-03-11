@@ -250,24 +250,7 @@ int file_redirection(char **tokens, int numArgs) {
     }
     return 0;
 }
-/*
- * Written by Edward
- * Some (UNTESTED!!!!!) code to parse commands and break it up
- * into something that execv() can hopefully use
- *
- * Things to probably note:
- * 	We don't need to use a method, just wrote it as one
- * 	so it didnt mess up your flow in the shell init stuff
- *
- * 	We need to free all the stuff in **tokens;
- * 	probably after each loop + exec call just to be safe
- * 	since we can just alloc it again next time
- *
- * 	Error handling? If the input is real wacky? Don't know
- * 	if we need to account for hyper-weird stuff where 
- * 	fgets() literally cannot read it (as opposed to
- * 	commands that don't exist)
- */
+
 int parse_command(char** tokens, char* line) {
     char *token;			            // creates an token to represent one parameter (eg. "ls" or "-la")
     token = strtok(line, " \t");        // isolates the first parameter
@@ -309,29 +292,9 @@ char* replace_redirection(char* original, int length) {
 	return result;
 }
 
-int parse_tokens_for_redirection(char** tokensBefore, char** tokensAfter, int numArgs) {
-   // char *tokenBefore;
-   // char *tokenAfter;
-   // int tokensAfterIndex = 0;
-    for (int i = 0; i < numArgs; i++) {
-        //printf("token[%d]: %s\n", i, tokensBefore[i]);
-        for (int j = 0; j < strlen(tokensBefore[i]); j++) {
-            //printf("token[%d][%d]: %c ", i, j, tokensBefore[i][j]);
-            if (tokensBefore[i][j] == '>'){}
-        }
-    }
-    
-    return 0;    
-}
-
 int main(int argc, char **argv) {
     //TODO: the command <./mysh .> starts up shell interactive mode and exits right away. It should return
     // <Error: Cannot open file .>
-    //TODO: fix redirection to account for no spaces in between >
-        // eg, /bin/echo hello world>tests-out/tmp.txt
-        // eg, /bin/echo hello world >tests-out/tmp.txt
-        // eg, /bin/echo hello world> tests-out/tmp.txt
-    //TODO: fix using an alias for certain commands like cat and echo
     int batchMode = 0;
     if (argc == 2) {
         batchMode = 1;
@@ -366,7 +329,6 @@ int main(int argc, char **argv) {
         if (!batchMode) {
             write(1, "mysh> ", 6); 
         }
-    	char **tokens = NULL;
         char    *linePtr = NULL;
         size_t   lineSize = 0;
         ssize_t  lineLength;
@@ -400,12 +362,6 @@ int main(int argc, char **argv) {
 	    free_list();
             goto CLEANUP;
         }
-        //parse_tokens_for_redirection(tokens, tokensBefore, numArgs);
-        //for(int i = 0; i < numArgs; i++) {
-        //    printf("token[%d]: %s\n", i, tokens[i]);
-       // }
-       // printf("line: %s\n", linePtr);
-       // printf("numargs: %d\n", numArgs);
         //----------------------------------------------
         // test for aliasing here
         int doAliasing = alias_mode(tokens, numArgs);
