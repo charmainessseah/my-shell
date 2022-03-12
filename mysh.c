@@ -293,8 +293,6 @@ char* replace_redirection(char* original, int length) {
 }
 
 int main(int argc, char **argv) {
-    //TODO: the command <./mysh .> starts up shell interactive mode and exits right away. It should return
-    // <Error: Cannot open file .>
     int batchMode = 0;
     if (argc == 2) {
         batchMode = 1;
@@ -320,10 +318,13 @@ int main(int argc, char **argv) {
     }
     char **tokens = NULL;
     char **childArgv = NULL;
-   char **newCommand = NULL;
+    char **newCommand = NULL;
+    char **duplicateCommands = NULL;
+    char **duplicateTokens = NULL;
     int exit = 0;
     while (1) {
         if (exit) {
+            fclose(fp);
             _exit(0);
         }
         if (!batchMode) {
@@ -334,11 +335,9 @@ int main(int argc, char **argv) {
         ssize_t  lineLength;
         lineLength = getline(&linePtr, &lineSize, fp);
         if (linePtr == NULL || lineLength == -1) {
-            fclose(fp);
-	    free_list();
+            free_list();
             exit = 1;
             goto CLEANUP;
-     // here       //_exit(0);
         }
         int result = strcmp(linePtr, "exit\n");
         if (batchMode) { // echo user command
@@ -347,19 +346,20 @@ int main(int argc, char **argv) {
 
         if (!result) {
             exit = 1;
-	    free_list();
+            free_list();
             goto CLEANUP;
-         // here   //   _exit(0);
         } 
         if(linePtr[lineLength - 1] == '\n')
             linePtr[lineLength - 1] = '\0';
-        //tokensBefore = malloc(sizeof(char*) * 512);
-	char* converted = replace_redirection(linePtr, lineLength);
+        char* converted = replace_redirection(linePtr, lineLength);
         tokens = malloc(sizeof(char*) * 512);
+        for (int i = 0; i < 512; i++) {
+            tokens[i] = NULL;
+        }
         int numArgs = parse_command(tokens, converted);
         free(converted);
         if (numArgs == 0) { // empty command
-	    free_list();
+            free_list();
             goto CLEANUP;
         }
         //----------------------------------------------
@@ -414,9 +414,9 @@ int main(int argc, char **argv) {
             }
             else {
                 //printf("updatingn alias \n");
-		//printf("%p", dupe);
-		update_alias(dupe, (char**)&tokens[2], numArgs-2);
-	    }
+                //printf("%p", dupe);
+                update_alias(dupe, (char**)&tokens[2], numArgs-2);
+            }
             goto CLEANUP;
         }
         if (doAliasing == 4) {
@@ -428,12 +428,11 @@ int main(int argc, char **argv) {
                 remove_alias(tokens[1]);
             goto CLEANUP;
         }
-        
+
         // ---------------------------------------------
-        // check for invalid redirection here
         int indexToken = file_redirection(tokens, numArgs);
         if (indexToken == -1) {
-           goto CLEANUP;
+            goto CLEANUP;
         }
         // --------------------------------------------------------
         // check if input is an alias
@@ -447,18 +446,31 @@ int main(int argc, char **argv) {
         }
         // create child process
         int status;
+        int newCommandLength = 0;
+        if (execAlias == 1) {
+            newCommandLength = alias->commandLength + numArgs - 1;
+        }
+        newCommand = malloc(sizeof(char*) * 512);
+        for (int i = 0; i < 512; i++) {
+            newCommand[i] = NULL;
+        }
+        duplicateCommands = (char **) malloc(sizeof(char*) * 512);
+        duplicateTokens = (char **) malloc(sizeof(char*) * 512);
         int retVal = fork();
         if (retVal == 0) {
             if (execAlias) {
-                //TODO: this line below was passing test 17, 18, 19 but it actually was not working as expected for echo and cat alias
-                newCommand = malloc(sizeof(char*) * 512);
-                printf("command length: %d\n", alias->commandLength);
                 for (int i = 0; i < (alias->commandLength); i++) {
-                    newCommand[i] = alias->command[i];
+                    duplicateCommands[i] = strdup(alias->command[i]);
+                }
+                for (int i = 0; i < numArgs; i++) {
+                    duplicateTokens[i] = strdup(tokens[i]);
+                }
+                for (int i = 0; i < (alias->commandLength); i++) {
+                    newCommand[i] = duplicateCommands[i];
                 }
                 int currIndex = alias->commandLength;
                 for (int i = 0; i < numArgs - 1; i++) {
-                    newCommand[currIndex++] = tokens[i + 1];
+                    newCommand[currIndex++] = strdup(duplicateTokens[i + 1]);
                 }
                 newCommand[currIndex] = NULL;
                 execv(alias->command[0], newCommand);
@@ -474,7 +486,6 @@ int main(int argc, char **argv) {
                     write(1, "Cannot write to file ", 21); 
                     write(1, tokens[indexToken], strlen(tokens[indexToken]));
                     write(1, "\n", 1);
-                    goto CLEANUP;
                 }   
                 execv(childArgv[0], childArgv);
             } else { // regular command, no redirection
@@ -485,49 +496,61 @@ int main(int argc, char **argv) {
             write(STDERR_FILENO, tokens[0], strlen(tokens[0]));
             write(STDERR_FILENO, ": Command not found.\n", 21);
             exit = 1;
-            goto CLEANUP;
-  // here          //_exit(1); // this means execv() fails
+            // here          //_exit(1); // this means execv() fails
         } else {
-            // parent process
+          // parent process
             int pid = retVal;
             waitpid(pid, &status, 0);
         }
- CLEANUP:
-        // free up resources
-	//printf("freeing\n");
-        free(linePtr);
-	//free(converted);
+
+CLEANUP:
+
+        if (fpChild != NULL) {
+            fclose(fpChild);
+        }
+
+        if (newCommand != NULL) {
+            for(int i = 0; i < newCommandLength; i++) {
+                free(newCommand[i]);
+            }
+            free(newCommand);
+        } 
+        newCommand = NULL;
+        
+        if (duplicateCommands != NULL ) {
+            free(duplicateCommands);
+        }
+        duplicateCommands = NULL;
+        
+        if (duplicateTokens != NULL) {
+            free(duplicateTokens);
+        }
+        duplicateTokens = NULL;
+        
+        if (childArgv != NULL) {
+            for (int i = 0; i < 512; i++) {
+                free(childArgv[i]);
+            }
+            free(childArgv);
+        }
+        childArgv = NULL;
+        
+        if (tokens != NULL) {
+            for(int i = 0; i < 512; i++) {
+                free(tokens[i]);
+            }
+            free(tokens);
+        }
+        tokens = NULL;
+        
+        if (linePtr != NULL) {
+            free(linePtr);
+        }
         linePtr = NULL;
         lineSize = 0;
     }
-    printf("freeing 2 \n");
-    // free up resources
-    if (fp != NULL) {
-        fclose(fp);
-    }
-    if (fpChild != NULL) {
-        fclose(fpChild);
-    }
-    if (tokens != NULL) {
-	//printf("freeing tokens\n");
-        for(int i = 0; i < 512; i++) {
-            free(tokens[i]); 
-        }                
-        free(tokens);
-    }
-//    if (newCommand != NULL) {
-//         for(int i = 0; i < 512; i++) {
-//             free(newCommand[i]);
-//         }
-//         free(newCommand);
-//     }
-    if (childArgv != NULL) {
-        for (int i = 0; i < 512; i++) {
-            free(childArgv[i]);
-        }
-        free(childArgv);
-    }
-    //free_list();
+
+    // should never exit here
     return 0;
 }
 
